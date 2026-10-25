@@ -45,8 +45,10 @@ false_ids = set()
 for z, trk, truth in zip(raw, tracks_log, truth_log):
     for i, (r, v) in enumerate(truth):
         if len(z):
-            j = np.argmin(np.abs(z[:, 0] - r))
-            if abs(z[j, 0] - r) < 1.0:
+            # match on range AND velocity so a false alarm cannot pass for the target
+            d = np.abs(z - [r, v])
+            j = np.argmin(d[:, 0] / p.range_resolution + d[:, 1] / p.velocity_resolution)
+            if d[j, 0] < 1.0 and d[j, 1] < 1.5:
                 err_raw[i].append(z[j] - [r, v])
         if trk:
             states = np.array([x for _, x in trk])

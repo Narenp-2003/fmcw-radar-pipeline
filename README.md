@@ -1,6 +1,6 @@
 # FMCW Radar Pipeline
 
-Python simulation of an automotive-style FMCW radar chain: beat-signal generation, range-Doppler processing, CFAR detection (CA and OS), and Kalman tracking with data association. Every stage is verified against hand calculations or theory with automated tests.
+Python simulation of an automotive-style FMCW radar chain: beat-signal generation, range-Doppler processing, CFAR detection (CA and OS), and Kalman tracking with data association. Every stage is verified against hand calculations or theory by 27 automated tests.
 
 ## Pipeline
 
@@ -42,22 +42,24 @@ In uniform noise the two detectors perform alike. With a strong interferer 4 bin
 ### Tracking
 ![Tracking](results/tracking.png)
 
-Three targets (one manoeuvring at -12 m/s^2) in clutter from CFAR false alarms:
+Three targets (one manoeuvring at -12 m/s^2) in clutter from CFAR false alarms (SNR -10 dB per sample, Pfa 1e-5, 300 frames):
 
 | Target | Tracked | Range RMSE raw -> track | Velocity RMSE raw -> track |
 |---|---|---|---|
-| 1 | <%> | <..> -> <..> m | <..> -> <..> m/s |
-| 2 | <%> | <..> -> <..> m | <..> -> <..> m/s |
-| 3 | <%> | <..> -> <..> m | <..> -> <..> m/s |
+| 1 | 99.3% | 0.043 -> 0.016 m | 0.057 -> 0.056 m/s |
+| 2 | 99.3% | 0.043 -> 0.005 m | 0.015 -> 0.015 m/s |
+| 3 (manoeuvring) | 99.3% | 0.045 -> 0.003 m | 0.110 -> 0.089 m/s |
 
-False confirmed tracks: <n>.
+False confirmed tracks: 0 over 300 frames.
+
+Tracking improves range error by roughly 3x to 15x. Velocity gains are small: for constant-velocity targets (1 and 2) the raw velocity error is a fixed quantisation offset, so there is nothing random to average away. The gain appears on the manoeuvring target, where the raw error varies from frame to frame. "Tracked" is capped at 99.3% (298 of 300 frames) because 3 hits are needed to confirm a track.
 
 ## Verification
 - Stage 1: range/velocity resolution, max range/velocity checked by hand and by test
 - Stage 2: beat frequency, Doppler phase, and noise power match theory
 - Stage 3: range-Doppler peaks land on the exact true bins
 - Stage 4: CA-CFAR alpha = 7.08 for N = 144, Pfa = 1e-3; OS-CFAR alpha verified in closed form for k = 1; measured Pfa within tolerance; masking test
-- Stage 5: confirmation timing, false-alarm rejection, two-target separation, tracker error below raw error
+- Stage 5: confirmation after 3 hits, false-alarm rejection, two-target separation, and tracker error below raw error on Gaussian-noise measurements
 
 ## Limitations and future work
 - Radial motion only (no angle of arrival); range-Doppler coupling ignored
